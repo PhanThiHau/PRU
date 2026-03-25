@@ -9,6 +9,8 @@ var tank_enemy_scene = preload("res://scenes/objects/tank_m-48.tscn")
 var prop_scene = preload("res://scenes/objects/destructible_prop.tscn")
 var powerup_scene = preload("res://scenes/objects/powerup.tscn")
 var building_boss_scene = preload("res://scenes/objects/boss_building.tscn")
+var ally_roaming_scene = preload("res://scenes/objects/ally_roaming.tscn")
+var enemy_soldier_scene = preload("res://scenes/Enemy/Enemy.tscn")
 
 const LEVEL_W: float = 4200.0
 const GROUND_Y: float = 650.0
@@ -59,6 +61,10 @@ func _ready():
 		if "topdown_mode" in node:
 			node.topdown_mode = true
 			
+	# Spawn 3 nhom dong minh (5 linh moi nhom)
+	_spawn_allies()
+	_spawn_enemies()
+			
 	queue_redraw()
 
 var victory_triggered: bool = false
@@ -73,6 +79,50 @@ func _process(delta):
 			var vz = preload("res://scenes/objects/VictoryZone.tscn").instantiate()
 			add_child(vz)
 			vz._trigger_victory()
+
+func _spawn_allies():
+	await get_tree().process_frame
+	var players = get_tree().get_nodes_in_group("player")
+	var p_pos = Vector2(400, 400)
+	if players.size() > 0:
+		p_pos = players[0].global_position
+		
+	var points = [
+		p_pos + Vector2(200, 0),
+		p_pos + Vector2(1200, 100),
+		p_pos + Vector2(2400, -100),
+		p_pos + Vector2(3600, 50),
+		p_pos + Vector2(4800, -50)
+	]
+	for pt in points:
+		for i in range(10):
+			var ally = ally_roaming_scene.instantiate()
+			ally.global_position = pt + Vector2(randf_range(-60, 60), randf_range(-60, 60))
+			if "topdown_mode" in ally:
+				ally.topdown_mode = true
+			add_child(ally)
+
+func _spawn_enemies():
+	await get_tree().process_frame
+	var players = get_tree().get_nodes_in_group("player")
+	var p_pos = Vector2(400, 400)
+	if players.size() > 0:
+		p_pos = players[0].global_position
+		
+	var points = [
+		p_pos + Vector2(1000, 0),
+		p_pos + Vector2(1800, 200),
+		p_pos + Vector2(3200, -200),
+		p_pos + Vector2(4400, 150),
+		p_pos + Vector2(5600, -150)
+	]
+	for pt in points:
+		for i in range(20):
+			var enemy = enemy_soldier_scene.instantiate()
+			enemy.global_position = pt + Vector2(randf_range(-60, 60), randf_range(-60, 60))
+			if "topdown_mode" in enemy:
+				enemy.topdown_mode = true
+			add_child(enemy)
 
 func _spawn_tank_ally(pos: Vector2):
 	var tank = tank_ally_scene.instantiate()

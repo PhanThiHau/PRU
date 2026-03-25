@@ -21,6 +21,7 @@ var is_dead: bool = false
 var invincible: bool = false
 var invincible_timer: float = 0.0
 var flash_timer: float = 0.0
+var aim_direction: Vector2 = Vector2.RIGHT
 
 # Shooting
 var shoot_timer: float = 0.0
@@ -109,6 +110,22 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.y = move_toward(velocity.y, 0, move_speed * 5.0 * delta)
 	
+	# --- Aim direction (8 directions via WASD) ---
+	var aim = Vector2.ZERO
+	if Input.is_action_pressed("move_right"):
+		aim.x = 1
+	elif Input.is_action_pressed("move_left"):
+		aim.x = -1
+	if Input.is_action_pressed("move_up"):
+		aim.y = -1
+	elif Input.is_action_pressed("move_down"):
+		aim.y = 1
+	
+	if aim != Vector2.ZERO:
+		aim_direction = aim.normalized()
+	else:
+		aim_direction = Vector2.RIGHT if facing_right else Vector2.LEFT
+	
 	# --- Jump ---
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not topdown_mode:
 		velocity.y = jump_force
@@ -191,10 +208,10 @@ func shoot():
 	
 	var bullet = bullet_scene.instantiate()
 	var weapon = GameManager.get_weapon_data()
-	var dir = Vector2.RIGHT if facing_right else Vector2.LEFT
+	var dir = aim_direction
 	var spread_rad = deg_to_rad(weapon.spread)
 	dir = dir.rotated(randf_range(-spread_rad, spread_rad))
-	var spawn_pos = global_position + dir * 25
+	var spawn_pos = global_position + aim_direction * 25
 	bullet.setup(spawn_pos, dir, weapon.speed, weapon.damage, weapon.color, true)
 	get_tree().current_scene.add_child(bullet)
 	_play_sfx(sfx_shoot)

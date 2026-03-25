@@ -4,6 +4,8 @@ extends Node2D
 ## Uses TileMap created in editor, player/enemy/airplane placed in editor
 
 var hud_scene = preload("res://scenes/ui/hud.tscn")
+var ally_roaming_scene = preload("res://scenes/objects/ally_roaming.tscn")
+var enemy_soldier_scene = preload("res://scenes/Enemy/Enemy.tscn")
 var hud: CanvasLayer
 var player: Node2D
 var rest_area_triggered: bool = false
@@ -62,6 +64,34 @@ func _ready():
 	
 	# Configure enemies and airplanes patrol ranges
 	_setup_enemies()
+	
+	# Spawn allies and enemies
+	_spawn_allies()
+	_spawn_enemies()
+
+func _spawn_allies():
+	if not player:
+		return
+	var base_pos = player.global_position
+	var points = [Vector2(200, -80), Vector2(2200, -80), Vector2(4200, -80)]
+	for pt_offset in points:
+		var spawn_pos = base_pos + pt_offset
+		for i in range(10):
+			var ally = ally_roaming_scene.instantiate()
+			ally.global_position = spawn_pos + Vector2(randf_range(-60, 60), randf_range(-20, 20))
+			add_child(ally)
+
+func _spawn_enemies():
+	if not player:
+		return
+	var base_pos = player.global_position
+	var points = [Vector2(1000, -80), Vector2(3000, -80), Vector2(5000, -80)]
+	for pt_offset in points:
+		var spawn_pos = base_pos + pt_offset
+		for i in range(20):
+			var enemy = enemy_soldier_scene.instantiate()
+			enemy.global_position = spawn_pos + Vector2(randf_range(-60, 60), randf_range(-20, 20))
+			add_child(enemy)
 
 func _process(delta):
 	if can_interact_ally and not ally_interacted:

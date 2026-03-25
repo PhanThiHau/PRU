@@ -143,11 +143,14 @@ func _shoot_at(player: Node2D, delta):
 		_fire_bullet(player)
 		shoot_timer = shoot_cooldown
 
-func _fire_bullet(_player: Node2D):
+func _fire_bullet(player: Node2D):
 	if not bullet_scene:
 		return
 	var bullet = bullet_scene.instantiate()
 	var dir = Vector2.RIGHT if facing_right else Vector2.LEFT
+	if topdown_mode and player:
+		dir = (player.global_position - global_position).normalized()
+		
 	bullet.setup(global_position + dir * 20, dir, 350, damage, Color(1, 0.6, 0.1), false)
 	get_tree().current_scene.add_child(bullet)
 	if sfx_shoot:

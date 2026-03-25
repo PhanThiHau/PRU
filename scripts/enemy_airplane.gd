@@ -59,10 +59,69 @@ func _physics_process(delta):
 	queue_redraw()
 
 func _drop_bomb():
-	if not bullet_scene: return
-	var bomb = bullet_scene.instantiate()
-	var drop_dir = Vector2(direction * 0.25, 1.0).normalized()
-	bomb.setup(global_position + Vector2(0, 18), drop_dir, 210.0, 2.0, Color(1.0, 0.45, 0.1), false)
+	var bomb = Node2D.new()
+	bomb.global_position = global_position + Vector2(0, 20)
+	bomb.z_index = 9
+	
+	# Attach a script inline via a custom class
+	var script = GDScript.new()
+	script.source_code = """
+extends Node2D
+
+var vel_x: float = 0.0
+var vel_y: float = 0.0
+var bomb_damage: float = 3.0
+var bomb_lifetime: float = 5.0
+
+func _ready():
+	vel_y = 20.0
+
+func _process(delta):
+	vel_y += 500.0 * delta
+	position.x += vel_x * delta
+	position.y += vel_y * delta
+	rotation = Vector2(vel_x, vel_y).angle()
+	
+	# Get ground level from player position
+	var ground_y = 700.0
+	var players = get_tree().get_nodes_in_group(\"player\")
+	if players.size() > 0 and is_instance_valid(players[0]):
+		ground_y = players[0].global_position.y + 10.0
+	
+	if global_position.y >= ground_y:
+		_bomb_explode()
+		return
+	
+	bomb_lifetime -= delta
+	if bomb_lifetime <= 0:
+		queue_free()
+	queue_redraw()
+
+func _draw():
+	draw_circle(Vector2.ZERO, 6.0, Color(0.15, 0.15, 0.15))
+	draw_circle(Vector2.ZERO, 4.0, Color(1.0, 0.4, 0.1))
+
+func _bomb_explode():
+	var explosion_scene = load(\"res://scenes/objects/no.tscn\")
+	if explosion_scene:
+		var exp = explosion_scene.instantiate()
+		exp.global_position = global_position
+		exp.scale = Vector2(0.5, 0.5)
+		get_tree().current_scene.add_child(exp)
+		var anim = exp.get_node_or_null(\"AnimatedSprite2D\")
+		if anim:
+			anim.play(\"explosion\")
+			get_tree().create_timer(1.2).timeout.connect(exp.queue_free)
+	# Deal damage to nearby units
+	for body in get_tree().get_nodes_in_group(\"player\") + get_tree().get_nodes_in_group(\"allies\"):
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 120.0:
+			if body.has_method(\"take_damage\"):
+				body.take_damage(int(bomb_damage))
+	queue_free()
+"""
+	script.reload()
+	bomb.set_script(script)
+	bomb.set("vel_x", direction * 30.0)
 	get_tree().current_scene.add_child(bomb)
 
 func take_damage(amount: float):

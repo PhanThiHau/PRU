@@ -1,0 +1,9 @@
+res://scenes/Player/player.gd
+res://scenes/level_1.gd
+res://scenes/level_2.gd
+res://scripts/ally_roaming.gd
+res://scripts/level_3.gd
+res://scenes/Enemy/enemy.gd
+res://scripts/enemy_soldier.gd
+res://scripts/bullet.gd
+res://scripts/enemy_airplane.gd
